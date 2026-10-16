@@ -1,29 +1,38 @@
-import connectDb from "@/lib/db";
-import Settings from "@/model/settings.model";
+import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req:NextRequest) {
+export async function POST(req: NextRequest) {
     try {
-        const { ownerId, businessName,supportEmail,knowledge}=await req.json()
-        if(!ownerId){
+        const { ownerId, businessName, supportEmail, knowledge } = await req.json();
+        if (!ownerId) {
             return NextResponse.json(
-                {message:"owner id is required"},
-                {status:400}
-            )
+                { message: "owner id is required" },
+                { status: 400 }
+            );
         }
-         await connectDb() 
-        const settings=await Settings.findOneAndUpdate(
-            {ownerId},
-            {ownerId, businessName,supportEmail,knowledge},
-            {new:true,upsert:true}
-        )
-        return NextResponse.json(settings)
+        const settings = await prisma.settings.upsert({
+            where: { ownerId },
+            update: {
+                businessName: businessName ?? "",
+                supportEmail: supportEmail ?? "",
+                knowledge: knowledge ?? "",
+            },
+            create: {
+                ownerId,
+                businessName: businessName ?? "",
+                supportEmail: supportEmail ?? "",
+                knowledge: knowledge ?? "",
+            },
+        });
+        return NextResponse.json(settings);
     } catch (error) {
+        console.error("settings error:", error);
         return NextResponse.json(
-                {message:`settings error ${error}`},
-                {status:500}
-            )
+            { message: `settings error ${error}` },
+            { status: 500 }
+        );
     }
 }
+
 
 
