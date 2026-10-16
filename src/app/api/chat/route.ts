@@ -1,5 +1,4 @@
-import connectDb from "@/lib/db";
-import Settings from "@/model/settings.model";
+import prisma from "@/lib/prisma";
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -28,8 +27,9 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        await connectDb();
-        const setting = await Settings.findOne({ ownerId });
+        const setting = await prisma.settings.findUnique({
+            where: { ownerId },
+        });
 
         if (!setting) {
             return NextResponse.json(
@@ -103,4 +103,4 @@ RULES:
             { status: 500, headers: corsHeaders }
         );
     }
-}
+}
